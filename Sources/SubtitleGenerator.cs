@@ -34,7 +34,7 @@ namespace SubtitleAI
         private async Task<FileInfo> GenerateSubtitleAsync(WhisperProcessor processor, CancellationToken cancellationToken)
         {
             _logger.Information("Converting media to wave...");
-            var waveStream = await ConvertFromMediaToWaveAsync(_inputFile);
+            var waveStream = await ConvertFromMediaToWaveAsync(_inputFile, cancellationToken);
             _logger.Information("Recognizing speech...");
             IEnumerable<SegmentData> speech = await RecognizeAsync(processor, waveStream, cancellationToken);
             _logger.Information("Generating subtitle...");
@@ -71,18 +71,21 @@ namespace SubtitleAI
             return resultData;
         }
 
-        private static async Task<MemoryStream> ConvertFromMediaToWaveAsync(string sourceFile, bool keepTempFiles = false)
+        private async Task<MemoryStream> ConvertFromMediaToWaveAsync(string sourceFile, CancellationToken cancellationToken, bool keepTempFiles = false)
         {
-            string targetFile = Path.ChangeExtension(sourceFile, ".wav");
-            targetFile = Path.Combine(_workingDirectory, targetFile);
+            string targetFile = Path.Combine(Environment.CurrentDirectory, _workingDirectory, Guid.NewGuid() + ".wav");
             var conversion = await FFmpeg.Conversions.FromSnippet.Convert(sourceFile, targetFile);
             conversion.AddParameter("-ar 16000", ParameterPosition.PostInput);
-            await conversion.Start();
+            conversion.OnProgress += (sender, args) =>
+            {
+                _logger.Information("Converting media to wave: {args.Percent}%", args.Percent);
+            };
+            var result = await conversion.Start(cancellationToken);
+            _logger.Information("Converted - {result}", result.Duration);
             var bytes = File.ReadAllBytes(targetFile);
             MemoryStream ms = new(bytes);
             if (!keepTempFiles)
             {
-                File.Delete(sourceFile);
                 File.Delete(targetFile);
             }
             return ms;
@@ -150,7 +153,7 @@ namespace SubtitleAI
                         _logger.Information("Downloading model: {progress:P}", roundedProgress);
                         previousProgress = roundedProgress;
                     }
-                    await Task.Delay(1000, token);
+                    await Task.Delay(25, token);
                 }
             }, token);
         }
