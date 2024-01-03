@@ -1,7 +1,7 @@
 ﻿using Serilog;
 using Xabe.FFmpeg;
 
-namespace SubtitleAI
+namespace SubtitleAI.Progress
 {
     internal class FFMpegDownloadingProgress(ILogger _logger) : IProgress<ProgressInfo>
     {

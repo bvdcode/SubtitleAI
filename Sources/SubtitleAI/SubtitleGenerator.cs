@@ -1,9 +1,11 @@
 ﻿using Serilog;
 using Whisper.net;
+using System.Text;
 using Xabe.FFmpeg;
 using Whisper.net.Ggml;
 using SubtitleAI.Helpers;
 using System.Diagnostics;
+using SubtitleAI.Progress;
 using Xabe.FFmpeg.Downloader;
 
 namespace SubtitleAI
@@ -25,8 +27,65 @@ namespace SubtitleAI
             _logger.Information("Checking libraries...");
             await CheckFfmpegAsync();
             var processor = await CreateWhisperAsync(cancellationToken);
+            _logger.Information("Generating subtitles...");
+            return await GenerateSubtitleAsync(processor, cancellationToken);
+        }
 
-            return new FileInfo("");
+        private async Task<FileInfo> GenerateSubtitleAsync(WhisperProcessor processor, CancellationToken cancellationToken)
+        {
+            _logger.Information("Converting media to wave...");
+            var waveStream = await ConvertFromMediaToWaveAsync(_inputFile);
+            _logger.Information("Recognizing speech...");
+            IEnumerable<SegmentData> speech = await RecognizeAsync(processor, waveStream, cancellationToken);
+            _logger.Information("Generating subtitle...");
+            string subtitles = GenerateSubtitles(speech);
+            string subtitleFile = Path.ChangeExtension(_inputFile, ".srt");
+            File.WriteAllText(subtitleFile, subtitles);
+            return new FileInfo(subtitleFile);
+        }
+
+        private static string GenerateSubtitles(IEnumerable<SegmentData> speech)
+        {
+            StringBuilder sb = new();
+            int index = 1;
+            foreach (var segment in speech)
+            {
+                sb.AppendLine(index.ToString());
+                sb.AppendLine($"{segment.Start:hh\\:mm\\:ss\\,fff} --> {segment.End:hh\\:mm\\:ss\\,fff}");
+                sb.AppendLine(segment.Text);
+                sb.AppendLine();
+                index++;
+            }
+            return sb.ToString();
+        }
+
+        private async Task<IEnumerable<SegmentData>> RecognizeAsync(WhisperProcessor processor, MemoryStream waveStream, CancellationToken cancellationToken)
+        {
+            List<SegmentData> resultData = [];
+            var processed = processor.ProcessAsync(waveStream, cancellationToken);
+            await foreach (var result in processed)
+            {
+                resultData.Add(result);
+                _logger.Information("Recognized speech: {result.Text}", result.Text);
+            }
+            return resultData;
+        }
+
+        private static async Task<MemoryStream> ConvertFromMediaToWaveAsync(string sourceFile, bool keepTempFiles = false)
+        {
+            string targetFile = Path.ChangeExtension(sourceFile, ".wav");
+            targetFile = Path.Combine(_workingDirectory, targetFile);
+            var conversion = await FFmpeg.Conversions.FromSnippet.Convert(sourceFile, targetFile);
+            conversion.AddParameter("-ar 16000", ParameterPosition.PostInput);
+            await conversion.Start();
+            var bytes = File.ReadAllBytes(targetFile);
+            MemoryStream ms = new(bytes);
+            if (!keepTempFiles)
+            {
+                File.Delete(sourceFile);
+                File.Delete(targetFile);
+            }
+            return ms;
         }
 
         private async Task<WhisperProcessor> CreateWhisperAsync(CancellationToken token)
