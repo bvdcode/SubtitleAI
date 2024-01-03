@@ -13,7 +13,7 @@ namespace SubtitleAI
     internal class SubtitleGenerator(string inputFile, ILogger logger)
     {
         private const string _workingDirectory = ".subtitle-ai-cache";
-        private const GgmlType _ggmlType = GgmlType.LargeV3;
+        private const GgmlType _ggmlType = GgmlType.Base;
         private readonly string _inputFile = inputFile;
         private readonly ILogger _logger = logger;
 
@@ -50,9 +50,13 @@ namespace SubtitleAI
             int index = 1;
             foreach (var segment in speech)
             {
+                if (string.IsNullOrWhiteSpace(segment.Text))
+                {
+                    continue;
+                }
                 sb.AppendLine(index.ToString());
                 sb.AppendLine($"{segment.Start:hh\\:mm\\:ss\\,fff} --> {segment.End:hh\\:mm\\:ss\\,fff}");
-                sb.AppendLine(segment.Text);
+                sb.AppendLine(segment.Text.Trim());
                 sb.AppendLine();
                 index++;
             }
@@ -66,7 +70,7 @@ namespace SubtitleAI
             await foreach (var result in processed)
             {
                 resultData.Add(result);
-                _logger.Information("Recognized speech: {result.Text}", result.Text);
+                _logger.Information("Recognized speech: {resultText}", result.Text);
             }
             return resultData;
         }
@@ -74,14 +78,15 @@ namespace SubtitleAI
         private async Task<MemoryStream> ConvertFromMediaToWaveAsync(string sourceFile, CancellationToken cancellationToken, bool keepTempFiles = false)
         {
             string targetFile = Path.Combine(Environment.CurrentDirectory, _workingDirectory, Guid.NewGuid() + ".wav");
-            var conversion = await FFmpeg.Conversions.FromSnippet.Convert(sourceFile, targetFile);
+            var conversion = await FFmpeg.Conversions.FromSnippet.ExtractAudio($"\"{sourceFile}\"", $"\"{targetFile}\"");
             conversion.AddParameter("-ar 16000", ParameterPosition.PostInput);
+            conversion.AddParameter("-err_detect ignore_err", ParameterPosition.PreInput);
             conversion.OnProgress += (sender, args) =>
             {
-                _logger.Information("Converting media to wave: {args.Percent}%", args.Percent);
+                _logger.Information("Converting media to wave: {percent}%", args.Percent);
             };
             var result = await conversion.Start(cancellationToken);
-            _logger.Information("Converted - {result}", result.Duration);
+            _logger.Information("Converted - elapsed: {result}", result.Duration);
             var bytes = File.ReadAllBytes(targetFile);
             MemoryStream ms = new(bytes);
             if (!keepTempFiles)
