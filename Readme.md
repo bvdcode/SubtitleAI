@@ -18,7 +18,7 @@ To use SubtitleAI, follow these steps:
 
 ## What's next?
 
-1. The programm will download WhisperAI model and FFMPEG library in temporary folder.
+1. The program will download WhisperAI model and FFMPEG library in temporary folder.
 2. Your media file will be converted to WAVE file.
 3. WhisperAI will recognize text from this file.
 4. Text will be created as subtitles file (.srt)
