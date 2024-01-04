@@ -8,7 +8,8 @@ To install SubtitleAI, follow these steps:
 
 1. Clone the repository: `git clone https://github.com/BigMakCode/SubtitleAI.git`
 2. Install the .NET 8.0: https://dotnet.microsoft.com/en-us/download
-3. Build application: 
+3. Build application from Sources: dotnet build --configuration Release --output ./build SubtitleAI.csproj
+4. Run application: dotnet .\build\SubtitleAI.dll D:\Temp\daily\input.mp4
 
 ## Usage
 
