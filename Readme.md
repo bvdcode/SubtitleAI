@@ -6,8 +6,9 @@ SubtitleAI is a program that utilizes artificial intelligence to generate subtit
 
 To install SubtitleAI, follow these steps:
 
-1. Clone the repository: `git clone https://github.com/your-username/SubtitleAI.git`
+1. Clone the repository: `git clone https://github.com/BigMakCode/SubtitleAI.git`
 2. Install the .NET 8.0: https://dotnet.microsoft.com/en-us/download
+3. Build application: 
 
 ## Usage
 
