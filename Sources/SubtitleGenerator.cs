@@ -13,7 +13,7 @@ namespace SubtitleAI
     internal class SubtitleGenerator(string inputFile, ILogger logger)
     {
         private const string _workingDirectory = ".subtitle-ai-cache";
-        private const GgmlType _ggmlType = GgmlType.Base;
+        private const GgmlType _ggmlType = GgmlType.MediumEn;
         private readonly string _inputFile = inputFile;
         private readonly ILogger _logger = logger;
 
@@ -48,7 +48,7 @@ namespace SubtitleAI
         {
             StringBuilder sb = new();
             int index = 1;
-            foreach (var segment in speech)
+            foreach (var segment in speech.DistinctBy(x => x.Text))
             {
                 if (string.IsNullOrWhiteSpace(segment.Text))
                 {
@@ -70,7 +70,7 @@ namespace SubtitleAI
             await foreach (var result in processed)
             {
                 resultData.Add(result);
-                _logger.Information("Recognized speech: {resultText}", result.Text);
+                _logger.Information("[{lang}]: {from} -> {to} - {resultText}", result.Language, result.Start, result.End, result.Text);
             }
             return resultData;
         }
