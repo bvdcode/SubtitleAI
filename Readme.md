@@ -1,6 +1,6 @@
 # SubtitleAI
 
-SubtitleAI is a program that utilizes artificial intelligence to generate subtitles for videos. It uses advanced machine learning algorithms to analyze audio content and generate accurate and synchronized subtitles. Using WhisperAI and FFMPEG.
+SubtitleAI is a __local executable__ program that utilizes artificial intelligence to generate subtitles for videos. It uses advanced machine learning algorithms to analyze audio content and generate accurate and synchronized subtitles. Using WhisperAI and FFMPEG.
 
 ## Installation
 
