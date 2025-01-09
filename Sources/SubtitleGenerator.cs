@@ -13,7 +13,7 @@ namespace SubtitleAI
     internal class SubtitleGenerator(string inputFile, ILogger logger)
     {
         private const string _workingDirectory = ".subtitle-ai-cache";
-        private const GgmlType _ggmlType = GgmlType.MediumEn;
+        private const GgmlType _ggmlType = GgmlType.LargeV3Turbo;
         private readonly string _inputFile = inputFile;
         private readonly ILogger _logger = logger;
 

@@ -7,10 +7,15 @@ namespace SubtitleAI.Helpers
         public static async Task<HttpResponseMessage> GetModel(GgmlType type)
         {
             string modelName = GetModelName(type);
-            string requestUri = $"https://huggingface.co/sandrohanea/whisper.net/resolve/v2/classic/{modelName}.bin";
+            string requestUri = $"https://huggingface.co/sandrohanea/whisper.net/resolve/main/classic/{modelName}.bin";
             HttpClient http = new();
             HttpRequestMessage request = new(HttpMethod.Get, requestUri);
-            return await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to download model {modelName} - {response.ReasonPhrase}");
+            }
+            return response;
         }
 
         private static string GetModelName(GgmlType type)
@@ -28,6 +33,7 @@ namespace SubtitleAI.Helpers
                 GgmlType.LargeV1 => "ggml-large-v1",
                 GgmlType.LargeV2 => "ggml-large-v2",
                 GgmlType.LargeV3 => "ggml-large-v3",
+                GgmlType.LargeV3Turbo => "ggml-large-v3-turbo",
                 _ => throw new ArgumentOutOfRangeException(nameof(type), type, null),
             };
         }
