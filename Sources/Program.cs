@@ -29,11 +29,11 @@ namespace SubtitleAI
             FileInfo result = await generator.GenerateSubtitleAsync(cancellationTokenSource.Token);
             Log.Logger.Information($"Subtitle file generated at {result.FullName}");
             // ffmpeg -i S45E03.mkv -i S45E03.srt -c copy -c:s copy -map 0 -map 1 -map_metadata 0 -map_chapters 0 -metadata:s:s:1 language=en S45E03SRT.mkv
-            string output = Path.ChangeExtension(inputFile.FullName, ".ensrt.mkv");
+            string output = Path.ChangeExtension(inputFile.FullName, ".eng.mkv");
             ProcessStartInfo startInfo = new()
             {
                 FileName = "ffmpeg",
-                Arguments = $"-i \"{inputFile.FullName}\" -i \"{result.FullName}\" -c copy -c:s copy -map 0 -map 1 -map_metadata 0 -map_chapters 0 -metadata:s:s:1 language=en \"{output}\"",
+                Arguments = $"-i \"{inputFile.FullName}\" -i \"{result.FullName}\" -c copy -c:s copy -map 0 -map 1 -map_metadata 0 -map_chapters 0 -metadata:s:s:0 language=eng \"{output}\"",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
