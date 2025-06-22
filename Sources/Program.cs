@@ -7,6 +7,7 @@ namespace SubtitleAI
     {
         static async Task Main(string[] args)
         {
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
             Log.Logger = new LoggerConfiguration()
                 .WriteTo.Console()
                 .CreateLogger();
@@ -52,8 +53,8 @@ namespace SubtitleAI
             process.BeginErrorReadLine();
             await process.WaitForExitAsync(cancellationTokenSource.Token);
             // delete the generated subtitle file and move result to input file
-            result.Delete();
-            inputFile.Delete();
+            //result.Delete();
+            //inputFile.Delete();
             Log.Logger.Information($"Subtitle file injected into {output}");
         }
     }
